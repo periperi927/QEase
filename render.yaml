@@ -3,7 +3,7 @@ services:
     name: qease
     runtime: node
     plan: free
-    buildCommand: npm run render:build
+    buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true

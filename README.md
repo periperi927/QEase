@@ -33,7 +33,7 @@ database file; otherwise QEase uses `qease.db` in the project root.
 
 1. Push this project to a GitHub repository you control.
 2. In Render, create a **Blueprint** from that repository and apply the included
-   `render.yaml`. Its build script compiles SQLite from source to match Render's
+   `render.yaml`. The install step rebuilds SQLite from source to match Render's
    runtime.
 3. Wait for the deployment to finish, then open the generated
    `https://qease.onrender.com` service URL (Render may add a suffix if that
