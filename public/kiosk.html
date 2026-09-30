@@ -279,11 +279,42 @@
 
       .footer {
         display: flex;
+        align-items: center;
         justify-content: space-between;
+        flex-wrap: wrap;
         gap: 16px;
         margin-top: 18px;
         color: var(--muted);
         font-size: 0.8rem;
+      }
+
+      .audio-button {
+        min-height: 44px;
+        border: 1px solid rgba(118, 101, 232, 0.24);
+        border-radius: 999px;
+        padding: 10px 16px;
+        background: #fff;
+        color: #594aa7;
+        font: inherit;
+        font-weight: 800;
+        cursor: pointer;
+        transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+      }
+
+      .audio-button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        background: var(--lavender);
+        box-shadow: 0 5px 16px rgba(89, 73, 164, 0.12);
+      }
+
+      .audio-button:focus-visible {
+        outline: 3px solid rgba(118, 101, 232, 0.5);
+        outline-offset: 3px;
+      }
+
+      .audio-button:disabled {
+        cursor: not-allowed;
+        opacity: 0.65;
       }
 
       #boardMessage {
@@ -352,7 +383,11 @@
       </div>
 
       <footer class="footer">
-        <span>Ticket status refreshes automatically.</span>
+        <span>Ticket status refreshes automatically. Tap to enable sound on this device.</span>
+        <button id="audioButton" class="audio-button" type="button" aria-pressed="false">
+          Enable voice announcements
+        </button>
+        <span id="audioStatus" role="status" aria-live="polite">Announcements are muted</span>
         <span id="boardMessage" role="status">Connecting to queue service…</span>
       </footer>
     </main>
@@ -363,6 +398,88 @@
       const boardMessage = document.getElementById('boardMessage');
       const clock = document.getElementById('clock');
       const date = document.getElementById('date');
+      const audioButton = document.getElementById('audioButton');
+      const audioStatus = document.getElementById('audioStatus');
+      const speechAvailable = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+      let audioEnabled = false;
+      let initialBoardLoaded = false;
+      let previousCalledIds = new Set();
+      let boardRequestSequence = 0;
+
+      if (!speechAvailable) {
+        audioButton.disabled = true;
+        audioButton.textContent = 'Voice announcements unavailable';
+        audioStatus.textContent = 'This browser does not support speech announcements';
+      }
+
+      function speak(text, onError) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = navigator.language || 'en';
+        utterance.rate = 0.92;
+        utterance.onerror = onError;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      function disableAnnouncements(message) {
+        audioEnabled = false;
+        audioButton.textContent = 'Enable voice announcements';
+        audioButton.setAttribute('aria-pressed', 'false');
+        audioStatus.textContent = message;
+      }
+
+      audioButton.addEventListener('click', () => {
+        if (!speechAvailable) return;
+
+        if (audioEnabled) {
+          window.speechSynthesis.cancel();
+          disableAnnouncements('Announcements are muted');
+          return;
+        }
+
+        audioEnabled = true;
+        audioButton.textContent = 'Mute voice announcements';
+        audioButton.setAttribute('aria-pressed', 'true');
+        audioStatus.textContent = 'Voice announcements enabled';
+
+        try {
+          speak('QEase voice announcements enabled', () => {
+            disableAnnouncements('Audio did not start. Tap to try enabling announcements again.');
+          });
+        } catch (error) {
+          console.error('Unable to start kiosk voice announcements:', error);
+          disableAnnouncements('Audio did not start. Tap to try enabling announcements again.');
+        }
+      });
+
+      function announceNewCalls(tickets) {
+        const calledIds = new Set(tickets.filter((ticket) => ticket.status === 'called').map((ticket) => ticket.id));
+
+        if (!initialBoardLoaded) {
+          initialBoardLoaded = true;
+          previousCalledIds = calledIds;
+          return;
+        }
+
+        const newCalls = tickets.filter((ticket) =>
+          ticket.status === 'called' && !previousCalledIds.has(ticket.id)
+        );
+        previousCalledIds = calledIds;
+
+        if (!audioEnabled) return;
+
+        for (const ticket of newCalls) {
+          const spokenCode = ticket.code.replace(/-/g, ' ');
+          const destination = ticket.counter_no ? `counter ${ticket.counter_no}` : 'the service counter';
+          try {
+            speak(`${ticket.queue_name}. Ticket ${spokenCode}, please proceed to ${destination}.`, () => {
+              audioStatus.textContent = 'A voice announcement could not be played on this device';
+            });
+          } catch (error) {
+            console.error('Unable to announce called ticket on kiosk:', error);
+            audioStatus.textContent = 'A voice announcement could not be played on this device';
+          }
+        }
+      }
 
       function updateClock() {
         const now = new Date();
@@ -454,17 +571,21 @@
       }
 
       async function loadBoard() {
+        const requestSequence = ++boardRequestSequence;
         try {
           const response = await fetch('/api/kiosk/board');
           const board = await response.json();
+          if (requestSequence !== boardRequestSequence) return;
           if (!response.ok) {
             throw new Error(board.error || 'Unable to load the public queue board.');
           }
 
+          announceNewCalls(board.nowServing);
           renderServing(board.nowServing);
           renderNext(board.nextTickets);
           boardMessage.textContent = 'All queues are up to date';
         } catch (error) {
+          if (requestSequence !== boardRequestSequence) return;
           boardMessage.textContent = 'Connection issue — retrying…';
           renderEmpty(servingList, 'Queue information is temporarily unavailable.');
           renderEmpty(nextList, 'Waiting tickets will appear when the connection is restored.');

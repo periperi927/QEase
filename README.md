@@ -42,6 +42,9 @@ database file; otherwise QEase uses `qease.db` in the project root.
 4. Open `/admin-login.html` on the service URL. The Blueprint generates a
    unique `QEASE_ADMIN_PASSWORD`; find it in the service's Environment settings
    in Render. The administrator username is `admin`.
+5. Open `/kiosk.html` on each public display and tap **Enable voice
+   announcements**. Browsers require this tap to allow sound; the kiosk speaks
+   tickets when they are newly called while that display is open.
 
 The included Blueprint uses Render's **free** web-service plan and does not
 attach a persistent disk. This is suitable for a public demo only: free
