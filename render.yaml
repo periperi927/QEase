@@ -3,7 +3,7 @@ services:
     name: qease
     runtime: node
     plan: free
-    buildCommand: npm ci --ignore-scripts && npm run rebuild --prefix node_modules/sqlite3
+    buildCommand: npm run render:build
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
