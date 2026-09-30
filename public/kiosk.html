@@ -317,6 +317,11 @@
         opacity: 0.65;
       }
 
+      .audio-help {
+        flex-basis: 100%;
+        color: var(--muted);
+      }
+
       #boardMessage {
         text-align: right;
       }
@@ -383,11 +388,12 @@
       </div>
 
       <footer class="footer">
-        <span>Ticket status refreshes automatically. Tap to enable sound on this device.</span>
+        <span>Ticket status refreshes automatically.</span>
         <button id="audioButton" class="audio-button" type="button" aria-pressed="false">
-          Enable voice announcements
+          Test &amp; enable kiosk audio
         </button>
         <span id="audioStatus" role="status" aria-live="polite">Announcements are muted</span>
+        <span class="audio-help">Keep this page open and in the foreground. If silent, check media volume and silent mode.</span>
         <span id="boardMessage" role="status">Connecting to queue service…</span>
       </footer>
     </main>
@@ -401,53 +407,91 @@
       const audioButton = document.getElementById('audioButton');
       const audioStatus = document.getElementById('audioStatus');
       const speechAvailable = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+      const AudioContextClass = window.AudioContext;
+      let audioContext = null;
       let audioEnabled = false;
       let initialBoardLoaded = false;
       let previousCalledIds = new Set();
       let boardRequestSequence = 0;
 
-      if (!speechAvailable) {
+      if (!speechAvailable && !AudioContextClass) {
         audioButton.disabled = true;
-        audioButton.textContent = 'Voice announcements unavailable';
-        audioStatus.textContent = 'This browser does not support speech announcements';
+        audioButton.textContent = 'Audio unavailable';
+        audioStatus.textContent = 'This browser does not support audio announcements';
       }
 
       function speak(text, onError) {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = navigator.language || 'en';
         utterance.rate = 0.92;
+        utterance.onstart = () => {
+          audioStatus.textContent = 'Voice announcements are working';
+        };
         utterance.onerror = onError;
+        window.speechSynthesis.resume();
         window.speechSynthesis.speak(utterance);
+      }
+
+      async function playTone() {
+        if (!AudioContextClass || !audioContext) return false;
+
+        try {
+          await audioContext.resume();
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.frequency.value = 880;
+          gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.16, audioContext.currentTime + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.24);
+          oscillator.connect(gain);
+          gain.connect(audioContext.destination);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.25);
+          return true;
+        } catch (error) {
+          console.error('Unable to play kiosk audio cue:', error);
+          return false;
+        }
       }
 
       function disableAnnouncements(message) {
         audioEnabled = false;
-        audioButton.textContent = 'Enable voice announcements';
+        audioButton.textContent = 'Test & enable kiosk audio';
         audioButton.setAttribute('aria-pressed', 'false');
         audioStatus.textContent = message;
       }
 
       audioButton.addEventListener('click', () => {
-        if (!speechAvailable) return;
+        if (!speechAvailable && !AudioContextClass) return;
 
         if (audioEnabled) {
-          window.speechSynthesis.cancel();
+          if (speechAvailable) window.speechSynthesis.cancel();
           disableAnnouncements('Announcements are muted');
           return;
         }
 
         audioEnabled = true;
-        audioButton.textContent = 'Mute voice announcements';
+        audioButton.textContent = 'Mute kiosk audio';
         audioButton.setAttribute('aria-pressed', 'true');
-        audioStatus.textContent = 'Voice announcements enabled';
+        audioStatus.textContent = 'Testing sound and voice…';
 
         try {
+          if (AudioContextClass && !audioContext) {
+            audioContext = new AudioContextClass();
+          }
+          void playTone();
+          if (!speechAvailable) {
+            audioStatus.textContent = 'Sound cues enabled; this browser does not support voice announcements';
+            return;
+          }
           speak('QEase voice announcements enabled', () => {
-            disableAnnouncements('Audio did not start. Tap to try enabling announcements again.');
+            void playTone();
+            audioStatus.textContent = 'Voice could not start. Check phone media volume and browser speech settings.';
           });
         } catch (error) {
           console.error('Unable to start kiosk voice announcements:', error);
-          disableAnnouncements('Audio did not start. Tap to try enabling announcements again.');
+          void playTone();
+          audioStatus.textContent = 'Voice could not start. Sound cue enabled if supported by this browser.';
         }
       });
 
@@ -471,8 +515,11 @@
           const spokenCode = ticket.code.replace(/-/g, ' ');
           const destination = ticket.counter_no ? `counter ${ticket.counter_no}` : 'the service counter';
           try {
+            void playTone();
+            if (!speechAvailable) continue;
             speak(`${ticket.queue_name}. Ticket ${spokenCode}, please proceed to ${destination}.`, () => {
-              audioStatus.textContent = 'A voice announcement could not be played on this device';
+              void playTone();
+              audioStatus.textContent = 'Voice could not play. Check phone media volume and browser speech settings.';
             });
           } catch (error) {
             console.error('Unable to announce called ticket on kiosk:', error);
