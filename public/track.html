@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Track QEase Ticket</title>
+    <style>
+      :root {
+        --bg: #f5f2ff;
+        --card: rgba(255, 255, 255, 0.9);
+        --primary: #8b7af5;
+        --primary-dark: #6f5fe4;
+        --text: #2a3143;
+        --muted: #59657d;
+        --border: #eae3ff;
+        --success: #6ec9b8;
+        --warning: #f5bf75;
+        --danger: #ef7b7b;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background-image: radial-gradient(ellipse at top left, rgba(236, 229, 255, 0.76), transparent 52%), linear-gradient(rgba(255,255,255,0.45), rgba(244,241,255,0.78)), url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 700px;
+        margin: clamp(24px, 8vh, 80px) auto;
+        padding: 24px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.82));
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: 0 14px 28px rgba(139, 122, 245, 0.12);
+        padding: 28px;
+        backdrop-filter: blur(12px);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(139, 122, 245, 0.12);
+      }
+
+      h1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 0;
+        letter-spacing: -0.045em;
+      }
+
+      h1::before {
+        content: "";
+        display: inline-grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(140deg, #c7bbff, #8b7af5);
+        color: #fff;
+        box-shadow: inset 0 0 0 3px rgba(255,255,255,0.78), 0 8px 18px rgba(139, 122, 245, 0.2);
+      }
+
+      form {
+        display: flex;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      input {
+        flex: 1;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 1rem;
+        color: var(--text);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      input:focus {
+        border-color: #aa9df8;
+        box-shadow: 0 0 0 4px rgba(139, 122, 245, 0.12);
+        outline: none;
+      }
+
+      .btn {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(135deg, #9b8af7 0%, #7b6fe8 100%);
+        color: #fff;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      }
+
+      .btn::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.28) 48%, transparent 76%);
+        transform: translateX(-120%);
+        pointer-events: none;
+      }
+
+      .btn:hover {
+        background: linear-gradient(135deg, #8d7af5 0%, #6f5fe4 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(139, 122, 245, 0.18);
+      }
+
+      .btn:hover::after {
+        animation: button-shimmer 0.75s ease;
+      }
+
+      .btn:focus-visible,
+      .back-link:focus-visible {
+        outline: 3px solid rgba(139, 122, 245, 0.38);
+        outline-offset: 3px;
+      }
+
+      .result {
+        margin-top: 24px;
+        padding: 18px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(139, 122, 245, 0.08), rgba(255,255,255,0.95));
+        border: 1px solid var(--border);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .result:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(139, 122, 245, 0.08);
+      }
+
+      .status-pill {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.73rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-top: 8px;
+      }
+
+      .waiting { background: #fff0d5; color: #805414; }
+      .called { background: #ebe7ff; color: #51429b; }
+      .serving { background: #dcf5ef; color: #226d61; }
+      .served { background: #edf0f5; color: #4b5563; }
+      .skipped { background: #ffe6e5; color: #9b3d3a; }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 16px;
+        color: var(--primary-dark);
+        text-decoration: none;
+        font-weight: 700;
+        transition: color 0.18s ease, transform 0.18s ease;
+      }
+
+      .back-link:hover {
+        color: var(--primary);
+        transform: translateX(2px);
+      }
+
+      @keyframes button-shimmer {
+        to { transform: translateX(120%); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .container {
+          padding: 16px;
+        }
+
+        .card {
+          padding: 22px;
+        }
+
+        form {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h1>Track your ticket</h1>
+        <p style="color: var(--muted); margin: 0;">Enter your ticket code such as ADM-102</p>
+
+        <form id="trackForm">
+          <input id="ticketCode" type="text" placeholder="ADM-102" required />
+          <button type="submit" class="btn">Check status</button>
+        </form>
+
+        <div class="result" id="resultBox">
+          No ticket checked yet.
+        </div>
+
+        <a class="back-link" href="/index.html">Back to dashboard</a>
+      </div>
+    </div>
+
+    <script>
+      const trackForm = document.getElementById('trackForm');
+      const resultBox = document.getElementById('resultBox');
+
+      trackForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const code = document.getElementById('ticketCode').value.trim();
+
+        try {
+          const response = await fetch(`/api/tickets/track/${encodeURIComponent(code)}`);
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Ticket not found.');
+          }
+
+          resultBox.innerHTML = `
+            <div><strong>${data.code}</strong></div>
+            <div>Queue: ${data.queue_name}</div>
+            <div>Ticket #${data.ticket_no}</div>
+            <div class="status-pill ${data.status}">${data.status}</div>
+            <div style="margin-top: 12px; color: var(--muted);">Updated: ${new Date(data.updated_at).toLocaleString()}</div>
+          `;
+        } catch (error) {
+          resultBox.innerHTML = `<div style="color: var(--danger);">${error.message}</div>`;
+        }
+      });
+
+      const ticketCode = new URLSearchParams(window.location.search).get('ticket');
+      if (ticketCode) {
+        document.getElementById('ticketCode').value = ticketCode;
+        trackForm.requestSubmit();
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QEase Dashboard</title>
+    <style>
+      :root {
+        --bg: #f4f1ff;
+        --card: rgba(255, 255, 255, 0.9);
+        --primary: #8b7af5;
+        --primary-dark: #6f5fe4;
+        --text: #2a3143;
+        --muted: #59657d;
+        --success: #6ec9b8;
+        --warning: #f5bf75;
+        --danger: #ef7b7b;
+        --border: #e9e1ff;
+        --shadow: 0 14px 34px rgba(89, 73, 164, 0.09);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background-image: radial-gradient(ellipse at top left, rgba(236, 229, 255, 0.76), transparent 52%), linear-gradient(rgba(255, 255, 255, 0.5), rgba(244, 241, 255, 0.78)), url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 1180px;
+        margin: 36px auto;
+        padding: 24px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 24px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.85));
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+        backdrop-filter: blur(12px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 40px rgba(89, 73, 164, 0.12);
+      }
+
+      h1, h2, h3 {
+        margin-top: 0;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 24px;
+      }
+
+      .header h1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 6px;
+        font-size: clamp(2rem, 4vw, 2.7rem);
+        letter-spacing: -0.055em;
+      }
+
+      .header h1::before {
+        content: "";
+        display: inline-grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 15px;
+        background: linear-gradient(140deg, #c7bbff, #8b7af5);
+        color: #fff;
+        box-shadow: inset 0 0 0 3px rgba(255,255,255,0.78), 0 8px 18px rgba(139, 122, 245, 0.2);
+      }
+
+      .btn {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 14px;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease, background 0.18s ease;
+      }
+
+      .btn::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.28) 48%, transparent 76%);
+        transform: translateX(-120%);
+        pointer-events: none;
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(139, 122, 245, 0.18);
+        filter: saturate(1.05);
+      }
+
+      .btn:hover::after {
+        animation: button-shimmer 0.75s ease;
+      }
+
+      .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 10px rgba(89, 73, 164, 0.14);
+      }
+
+      .btn:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      a:focus-visible {
+        outline: 3px solid rgba(139, 122, 245, 0.38);
+        outline-offset: 3px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #9b8af7 0%, #7b6fe8 100%);
+        color: #fff;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #8d7af5 0%, #6f5fe4 100%);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #7dd6c7 0%, #60c0b0 100%);
+        color: #fff;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 0.92rem;
+        color: var(--muted);
+      }
+
+      input, select {
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        font-size: 1rem;
+        background: #fff;
+        color: var(--text);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: #aa9df8;
+        box-shadow: 0 0 0 4px rgba(139, 122, 245, 0.12);
+        outline: none;
+      }
+
+      .queue-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .queue-item {
+        border: 1px solid var(--border);
+        background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(244,241,255,0.95));
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .stat-box,
+      .counter-box,
+      .ticket-box {
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .queue-item:hover,
+      .counter-box:hover,
+      .ticket-box:hover,
+      .stat-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(139, 122, 245, 0.12);
+      }
+
+      .announcement-banner {
+        display: none;
+        margin-top: 16px;
+        padding: 14px 18px;
+        border-radius: 12px;
+        background: linear-gradient(90deg, #b5acf8, #8b7af5);
+        color: #fff;
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        box-shadow: 0 10px 24px rgba(139, 122, 245, 0.2);
+      }
+
+      .announcement-banner.visible {
+        display: block;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 52px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        background: #ebe7ff;
+        color: var(--primary-dark);
+      }
+
+      .ticket-panel {
+        margin-top: 20px;
+      }
+
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin: 0 0 24px;
+      }
+
+      .analytics-card {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 20px 22px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(239,235,255,0.88));
+        box-shadow: 0 12px 28px rgba(89, 73, 164, 0.07);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      .analytics-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 30px rgba(89, 73, 164, 0.12);
+      }
+
+      .analytics-card small {
+        display: block;
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.055em;
+        text-transform: uppercase;
+      }
+
+      .analytics-card strong {
+        display: block;
+        margin-top: 8px;
+        color: var(--text);
+        font-size: clamp(1.8rem, 3vw, 2.3rem);
+        letter-spacing: -0.04em;
+      }
+
+      .analytics-card span {
+        display: block;
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .peak-hours {
+        margin: -6px 0 24px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 18px 20px;
+        background: rgba(255, 255, 255, 0.78);
+      }
+
+      .peak-hours h2 {
+        margin: 0 0 14px;
+        font-size: 0.95rem;
+      }
+
+      .peak-hour-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+      }
+
+      .peak-hour-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #f5f2ff;
+        color: var(--muted);
+        font-size: 0.88rem;
+      }
+
+      .peak-hour-item strong {
+        color: var(--primary-dark);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .stat-box {
+        background: #fbf9ff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .stat-box small {
+        color: var(--muted);
+        display: block;
+        margin-bottom: 6px;
+      }
+
+      .stat-box strong {
+        font-size: 1.5rem;
+      }
+
+      .counter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .counter-box {
+        background: #fbf9ff;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .counter-box strong {
+        display: block;
+        font-size: 1.3rem;
+        margin-bottom: 6px;
+      }
+
+      .ticket-box {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        background: linear-gradient(135deg, rgba(139, 122, 245, 0.18) 0%, rgba(255, 255, 255, 0.95) 100%);
+      }
+
+      .ticket-box strong {
+        font-size: 1.9rem;
+      }
+
+      .issued-ticket {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .ticket-qr {
+        display: block;
+        width: 132px;
+        height: 132px;
+        padding: 6px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #fff;
+      }
+
+      .ticket-link {
+        display: inline-block;
+        margin-top: 8px;
+        color: var(--primary-dark);
+        font-size: 0.84rem;
+        overflow-wrap: anywhere;
+      }
+
+      .queue-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 0.82rem;
+        text-transform: uppercase;
+      }
+
+      .status {
+        display: inline-block;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.73rem;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .waiting { background: #fff0d5; color: #805414; }
+      .called { background: #ebe7ff; color: #51429b; }
+      .serving { background: #dcf5ef; color: #226d61; }
+      .served { background: #edf0f5; color: #4b5563; }
+      .skipped { background: #ffe6e5; color: #9b3d3a; }
+
+      .alert {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.92rem;
+      }
+
+      .alert-success { background: #e7f8ef; color: #286b5f; }
+      .alert-error { background: #fdeceb; color: #9b3d3a; }
+
+      @keyframes button-shimmer {
+        to { transform: translateX(120%); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .analytics-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .container {
+          margin: 16px auto;
+          padding: 16px;
+        }
+      }
+
+      @media (max-width: 540px) {
+        .header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .header > div:last-child {
+          width: 100%;
+        }
+
+        .header > div:last-child .btn {
+          flex: 1;
+          text-align: center;
+        }
+
+        .card {
+          border-radius: 18px;
+          padding: 18px;
+        }
+
+        .issued-ticket {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media print {
+        body * {
+          visibility: hidden !important;
+        }
+
+        #latestTicketBox,
+        #latestTicketBox * {
+          visibility: visible !important;
+        }
+
+        #latestTicketBox {
+          position: absolute;
+          inset: 0 auto auto 0;
+          width: 100%;
+          border: 0;
+          background: #fff;
+          box-shadow: none;
+          color: #111827;
+        }
+
+        #latestTicketBox .ticket-print-action {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div>
+          <h1>QEase</h1>
+          <p style="margin: 0; color: var(--muted);">Queue Management for Campus Services</p>
+        </div>
+        <div style="display:flex; gap: 8px; align-items:center;">
+          <a href="/track.html" class="btn btn-primary" style="text-decoration: none; display: inline-block;">Track ticket</a>
+          <button type="button" class="btn btn-primary" id="logoutBtn">Log out</button>
+        </div>
+      </div>
+
+      <section class="analytics-grid" aria-label="Today's queue analytics">
+        <div class="analytics-card">
+          <small>Total tickets today</small>
+          <strong id="totalTicketsToday">--</strong>
+          <span>Tickets issued today</span>
+        </div>
+        <div class="analytics-card">
+          <small>Served tickets</small>
+          <strong id="servedTicketsToday">--</strong>
+          <span>Completed today</span>
+        </div>
+        <div class="analytics-card">
+          <small>Average wait time</small>
+          <strong id="averageWaitTime">--</strong>
+          <span>From ticket issue to first call</span>
+        </div>
+      </section>
+      <section class="peak-hours" aria-labelledby="peakHoursHeading">
+        <h2 id="peakHoursHeading">Busiest hours today</h2>
+        <div id="peakHourList" class="peak-hour-list">
+          <span style="color: var(--muted);">Loading hourly report…</span>
+        </div>
+      </section>
+
+      <div class="grid">
+        <div class="card">
+          <h2>Add service queue</h2>
+          <form id="queueForm">
+            <label>
+              Queue name
+              <input type="text" id="queueName" placeholder="Admissions" required />
+            </label>
+            <label>
+              Queue prefix
+              <input type="text" id="queuePrefix" placeholder="ADM" maxlength="6" required />
+            </label>
+            <button type="submit" class="btn btn-primary">Create queue</button>
+          </form>
+
+          <div id="queueNotice"></div>
+
+          <div class="queue-list" id="queueList"></div>
+        </div>
+
+        <div class="card">
+          <h2>Issue a ticket</h2>
+          <form id="issueForm">
+            <label>
+              Select queue
+              <select id="queueSelect" required></select>
+            </label>
+            <button type="submit" class="btn btn-success">Issue ticket</button>
+          </form>
+
+          <div class="ticket-panel">
+            <h3>Latest ticket</h3>
+            <div class="ticket-box" id="latestTicketBox">
+              No ticket issued yet.
+            </div>
+          </div>
+
+          <div class="ticket-panel">
+            <h3>Live queue controls</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+              <label style="flex: 1; min-width: 150px; display:flex; flex-direction:column; gap: 6px; color: var(--muted);">
+                Assigned counter
+                <select id="counterSelect">
+                  <option value="1">Counter 1</option>
+                  <option value="2">Counter 2</option>
+                  <option value="3">Counter 3</option>
+                  <option value="4">Counter 4</option>
+                  <option value="5">Counter 5</option>
+                  <option value="6">Counter 6</option>
+                </select>
+              </label>
+            </div>
+            <div class="queue-controls">
+              <button type="button" class="btn btn-primary" id="callNextBtn">Call next</button>
+              <button type="button" class="btn btn-success" id="serveCurrentBtn">Serve current</button>
+              <button type="button" class="btn btn-primary" id="skipCurrentBtn">Skip</button>
+              <button type="button" class="btn btn-primary" id="toggleAudioBtn">Audio on</button>
+              <button type="button" class="btn btn-primary" id="resetQueueBtn">Reset queue</button>
+              <button type="button" class="btn btn-primary" id="clearQueueBtn">Clear queue</button>
+              <button type="button" class="btn btn-primary" id="kioskModeBtn">Kiosk mode off</button>
+            </div>
+
+            <div id="announcementBanner" class="announcement-banner">No active announcement</div>
+            <div class="stats-grid" id="queueStatsGrid"></div>
+          </div>
+
+          <div class="ticket-panel">
+            <h3>Counter desk</h3>
+            <div class="counter-grid" id="counterGrid"></div>
+          </div>
+
+          <div class="ticket-panel">
+            <h3>Current queue status</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Queue</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="ticketTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const queueList = document.getElementById('queueList');
+      const queueSelect = document.getElementById('queueSelect');
+      const counterSelect = document.getElementById('counterSelect');
+      const ticketTableBody = document.getElementById('ticketTableBody');
+      const latestTicketBox = document.getElementById('latestTicketBox');
+      const queueStatsGrid = document.getElementById('queueStatsGrid');
+      const counterGrid = document.getElementById('counterGrid');
+      const totalTicketsToday = document.getElementById('totalTicketsToday');
+      const servedTicketsToday = document.getElementById('servedTicketsToday');
+      const averageWaitTime = document.getElementById('averageWaitTime');
+      const peakHourList = document.getElementById('peakHourList');
+      const announcementBanner = document.getElementById('announcementBanner');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const callNextBtn = document.getElementById('callNextBtn');
+      const serveCurrentBtn = document.getElementById('serveCurrentBtn');
+      const skipCurrentBtn = document.getElementById('skipCurrentBtn');
+      const toggleAudioBtn = document.getElementById('toggleAudioBtn');
+      const resetQueueBtn = document.getElementById('resetQueueBtn');
+      const clearQueueBtn = document.getElementById('clearQueueBtn');
+      const kioskModeBtn = document.getElementById('kioskModeBtn');
+
+      const state = {
+        audioEnabled: true,
+        queueId: null,
+        kioskMode: false,
+      };
+
+      async function fetchJson(url, options = {}) {
+        const response = await fetch(url, options);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Request failed.');
+        }
+        return data;
+      }
+
+      async function ensureAdminAccess() {
+        try {
+          const session = await fetchJson('/api/admin/session');
+          return session.user;
+        } catch (error) {
+          window.location.href = '/admin-login.html?next=' + encodeURIComponent('/index.html');
+          return null;
+        }
+      }
+
+      function showNotice(elementId, message, isError = false) {
+        const noticeEl = document.getElementById(elementId);
+        noticeEl.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+        noticeEl.textContent = message;
+      }
+
+      function speakAnnouncement(message, isUrgent = false) {
+        if (!state.audioEnabled) {
+          return;
+        }
+
+        if (state.kioskMode) {
+          announcementBanner.textContent = message;
+          announcementBanner.classList.add('visible');
+        }
+
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.lang = 'en-US';
+          utterance.rate = isUrgent ? 1.35 : 1;
+          utterance.pitch = 1;
+          utterance.volume = 1;
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.speak(utterance);
+        }
+
+        if (window.AudioContext || window.webkitAudioContext) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioCtx();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.value = isUrgent ? 1100 : 880;
+          gainNode.gain.value = 0.08;
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.18);
+        }
+      }
+
+      function renderQueueOptions(queues) {
+        const selectedValue = queueSelect.value || (queues[0] && String(queues[0].id));
+        queueSelect.innerHTML = '';
+        if (!queues.length) {
+          queueSelect.innerHTML = '<option value="">No queues available</option>';
+          state.queueId = null;
+          return;
+        }
+
+        queues.forEach((queue) => {
+          const option = document.createElement('option');
+          option.value = queue.id;
+          option.textContent = `${queue.name} (${queue.prefix})`;
+          if (String(queue.id) === String(selectedValue)) {
+            option.selected = true;
+          }
+          queueSelect.appendChild(option);
+        });
+
+        state.queueId = Number(queueSelect.value || queues[0].id);
+      }
+
+      function renderQueues(queues) {
+        queueList.innerHTML = '';
+
+        if (!queues.length) {
+          queueList.innerHTML = '<p style="color: var(--muted);">No queues created yet.</p>';
+          return;
+        }
+
+        queues.forEach((queue) => {
+          const item = document.createElement('div');
+          item.className = 'queue-item';
+          item.innerHTML = `
+            <div>
+              <strong>${queue.name}</strong><br />
+              <small>${queue.prefix}</small>
+            </div>
+            <span class="badge">${queue.prefix}</span>
+          `;
+          queueList.appendChild(item);
+        });
+      }
+
+      function renderAnalytics(analytics) {
+        totalTicketsToday.textContent = analytics.totalTicketsToday;
+        servedTicketsToday.textContent = analytics.servedTicketsToday;
+        averageWaitTime.textContent = analytics.averageWaitMinutes == null
+          ? '—'
+          : analytics.averageWaitMinutes < 1
+            ? '< 1 min'
+            : `${Math.round(analytics.averageWaitMinutes)} min`;
+      }
+
+      function renderPeakHours(peakHours) {
+        if (!peakHours.length) {
+          peakHourList.textContent = 'No tickets issued today yet.';
+          return;
+        }
+
+        peakHourList.replaceChildren(...peakHours.map((entry) => {
+          const item = document.createElement('div');
+          item.className = 'peak-hour-item';
+          const hour = document.createElement('span');
+          hour.textContent = entry.hour;
+          const count = document.createElement('strong');
+          count.textContent = `${entry.tickets} ticket${entry.tickets === 1 ? '' : 's'}`;
+          item.append(hour, count);
+          return item;
+        }));
+      }
+
+      function renderQueueStats(stats) {
+        if (!stats || !stats.queue) {
+          queueStatsGrid.innerHTML = '<div class="stat-box"><small>No queue selected</small><strong>0</strong></div>';
+          return;
+        }
+
+        const waiting = Number(stats.summary?.waiting || 0);
+        const called = Number(stats.summary?.called || 0);
+        const serving = Number(stats.summary?.serving || 0);
+        const served = Number(stats.summary?.served || 0);
+        const nextTicket = stats.nextTicket ? stats.nextTicket.code : '—';
+        const currentTicket = stats.currentTicket ? stats.currentTicket.code : '—';
+
+        queueStatsGrid.innerHTML = `
+          <div class="stat-box">
+            <small>Queue</small>
+            <strong>${stats.queue.prefix}</strong>
+          </div>
+          <div class="stat-box">
+            <small>Waiting</small>
+            <strong>${waiting}</strong>
+          </div>
+          <div class="stat-box">
+            <small>Called</small>
+            <strong>${called}</strong>
+          </div>
+          <div class="stat-box">
+            <small>Serving</small>
+            <strong>${serving}</strong>
+          </div>
+          <div class="stat-box">
+            <small>Next ticket</small>
+            <strong>${nextTicket}</strong>
+          </div>
+          <div class="stat-box">
+            <small>Current ticket</small>
+            <strong>${currentTicket}</strong>
+          </div>
+          <div class="stat-box">
+            <small>Served</small>
+            <strong>${served}</strong>
+          </div>
+          <div class="stat-box">
+            <small>Status</small>
+            <strong>${stats.queue.active ? 'Open' : 'Closed'}</strong>
+          </div>
+        `;
+      }
+
+      function renderCounters(tickets) {
+        const counterNumbers = [1, 2, 3, 4, 5, 6];
+        counterGrid.innerHTML = counterNumbers.map((counter) => {
+          const current = tickets.find((ticket) => Number(ticket.counter_no) === counter && (ticket.status === 'called' || ticket.status === 'serving' || ticket.status === 'served')) || null;
+          return `
+            <div class="counter-box">
+              <strong>Counter ${counter}</strong>
+              <div>${current ? current.code : 'Idle'}</div>
+              <small style="color: var(--muted); display:block; margin-top:4px;">${current ? current.status : 'Available'}</small>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function renderTickets(tickets) {
+        if (!tickets.length) {
+          ticketTableBody.innerHTML = '<tr><td colspan="4">No active tickets.</td></tr>';
+          return;
+        }
+
+        ticketTableBody.innerHTML = tickets.map((ticket) => {
+          const actionButton = ticket.status === 'waiting'
+            ? '<button class="btn btn-primary" style="padding: 7px 12px; font-size: 0.8rem;" data-action="call" data-ticket-id="' + ticket.id + '">Call</button>'
+            : ticket.status === 'called'
+              ? '<button class="btn btn-success" style="padding: 7px 12px; font-size: 0.8rem;" data-action="serve" data-ticket-id="' + ticket.id + '">Serve</button>'
+              : '<button class="btn btn-primary" style="padding: 7px 12px; font-size: 0.8rem;" data-action="reset" data-ticket-id="' + ticket.id + '">Reset</button>';
+
+          return `
+            <tr>
+              <td>${ticket.code}</td>
+              <td>${ticket.queue_name}</td>
+              <td><span class="status ${ticket.status}">${ticket.status}</span></td>
+              <td>${actionButton}</td>
+            </tr>
+          `;
+        }).join('');
+
+        ticketTableBody.querySelectorAll('[data-action]').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const ticketId = Number(button.dataset.ticketId);
+            const action = button.dataset.action;
+            const nextStatus = action === 'call' ? 'called' : action === 'serve' ? 'served' : 'waiting';
+            const counterNo = Number(counterSelect.value) || 1;
+
+            try {
+              const updated = await fetchJson(`/api/tickets/${ticketId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: nextStatus, counter_no: counterNo })
+              });
+
+              if (updated.status === 'called') {
+                speakAnnouncement(`Now calling ${updated.code}. Please proceed to counter ${updated.counter_no || counterNo}.`, true);
+              }
+
+              if (updated.status === 'served') {
+                speakAnnouncement(`${updated.code} has been served.`);
+              }
+
+              await loadDashboard();
+            } catch (error) {
+              showNotice('queueNotice', error.message, true);
+            }
+          });
+        });
+      }
+
+      async function loadDashboard() {
+        try {
+          const [queues, tickets, analytics, peakHours] = await Promise.all([
+            fetchJson('/api/queues'),
+            fetchJson('/api/tickets/active'),
+            fetchJson('/api/analytics/today'),
+            fetchJson('/api/analytics/peak-hours')
+          ]);
+
+          renderAnalytics(analytics);
+          renderPeakHours(peakHours.peakHours);
+          renderQueues(queues);
+          renderQueueOptions(queues);
+
+          const selectedTickets = tickets.filter((ticket) => !state.queueId || Number(ticket.queue_id) === Number(state.queueId));
+          renderTickets(selectedTickets);
+
+          if (state.queueId) {
+            const stats = await fetchJson(`/api/queues/${state.queueId}/status`);
+            renderQueueStats(stats);
+            renderCounters(selectedTickets);
+          } else {
+            queueStatsGrid.innerHTML = '<div class="stat-box"><small>No queue selected</small><strong>--</strong></div>';
+            renderCounters([]);
+          }
+        } catch (error) {
+          showNotice('queueNotice', error.message, true);
+        }
+      }
+
+      async function logout() {
+        try {
+          if (window.qeaseEvents) {
+            window.qeaseEvents.close();
+          }
+          await fetchJson('/api/admin/logout', { method: 'POST' });
+        } catch (error) {
+          // Ignore logout errors and redirect to login.
+        }
+
+        window.location.href = '/admin-login.html';
+      }
+
+      document.getElementById('queueForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const name = document.getElementById('queueName').value.trim();
+        const prefix = document.getElementById('queuePrefix').value.trim();
+
+        try {
+          const queue = await fetchJson('/api/queues', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, prefix })
+          });
+
+          showNotice('queueNotice', `Queue created: ${queue.name} (${queue.prefix})`);
+          document.getElementById('queueForm').reset();
+          await loadDashboard();
+        } catch (error) {
+          showNotice('queueNotice', error.message, true);
+        }
+      });
+
+      document.getElementById('issueForm').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const queueId = Number(queueSelect.value);
+
+        try {
+          const ticket = await fetchJson('/api/tickets/issue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ queue_id: queueId })
+          });
+
+          latestTicketBox.replaceChildren();
+          const ticketContent = document.createElement('div');
+          ticketContent.className = 'issued-ticket';
+          const ticketDetails = document.createElement('div');
+          const ticketHeading = document.createElement('div');
+          ticketHeading.textContent = 'Ticket issued successfully';
+          const ticketCode = document.createElement('strong');
+          ticketCode.textContent = ticket.code;
+          const queueName = document.createElement('div');
+          queueName.textContent = ticket.queue_name;
+          const trackingLink = document.createElement('a');
+          trackingLink.className = 'ticket-link';
+          trackingLink.href = ticket.trackingUrl;
+          trackingLink.textContent = 'Open ticket tracking';
+          const printButton = document.createElement('button');
+          printButton.className = 'btn btn-primary ticket-print-action';
+          printButton.type = 'button';
+          printButton.textContent = 'Print ticket';
+          printButton.addEventListener('click', () => window.print());
+          const qrCode = document.createElement('img');
+          qrCode.className = 'ticket-qr';
+          qrCode.src = ticket.qrCodeDataUrl;
+          qrCode.alt = `QR code for tracking ticket ${ticket.code}`;
+
+          ticketDetails.append(ticketHeading, ticketCode, queueName, trackingLink, printButton);
+          ticketContent.append(ticketDetails, qrCode);
+          latestTicketBox.appendChild(ticketContent);
+          speakAnnouncement(`New ticket ${ticket.code} has been issued.`);
+          await loadDashboard();
+        } catch (error) {
+          latestTicketBox.innerHTML = `<div style="color: var(--danger);">${error.message}</div>`;
+        }
+      });
+
+      queueSelect.addEventListener('change', () => {
+        state.queueId = Number(queueSelect.value || 0);
+        loadDashboard();
+      });
+
+      callNextBtn.addEventListener('click', async () => {
+        if (!state.queueId) {
+          showNotice('queueNotice', 'Select a queue before calling the next number.', true);
+          return;
+        }
+
+        try {
+          const nextTicket = await fetchJson(`/api/queues/${state.queueId}/next`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ counter_no: Number(counterSelect.value) || 1 })
+          });
+          speakAnnouncement(`Now calling ${nextTicket.code}. Please proceed to counter ${nextTicket.counter_no || counterSelect.value}.`, true);
+          await loadDashboard();
+        } catch (error) {
+          showNotice('queueNotice', error.message, true);
+        }
+      });
+
+      serveCurrentBtn.addEventListener('click', async () => {
+        if (!state.queueId) {
+          showNotice('queueNotice', 'Select a queue before serving a ticket.', true);
+          return;
+        }
+
+        try {
+          const tickets = await fetchJson('/api/tickets/active');
+          const queueTickets = tickets.filter((ticket) => Number(ticket.queue_id) === Number(state.queueId));
+          const current = queueTickets.find((ticket) => ticket.status === 'called' || ticket.status === 'serving') || queueTickets[0];
+
+          if (!current) {
+            showNotice('queueNotice', 'No ticket is ready to be served in this queue.', true);
+            return;
+          }
+
+          const updated = await fetchJson(`/api/tickets/${current.id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'served', counter_no: Number(counterSelect.value) || 1 })
+          });
+
+          speakAnnouncement(`${updated.code} has been served.`);
+          await loadDashboard();
+        } catch (error) {
+          showNotice('queueNotice', error.message, true);
+        }
+      });
+
+      skipCurrentBtn.addEventListener('click', async () => {
+        if (!state.queueId) {
+          showNotice('queueNotice', 'Select a queue before skipping a ticket.', true);
+          return;
+        }
+
+        try {
+          const tickets = await fetchJson('/api/tickets/active');
+          const queueTickets = tickets.filter((ticket) => Number(ticket.queue_id) === Number(state.queueId));
+          const current = queueTickets.find((ticket) => ticket.status === 'called' || ticket.status === 'serving') || queueTickets[0];
+
+          if (!current) {
+            showNotice('queueNotice', 'No ticket is available to skip in this queue.', true);
+            return;
+          }
+
+          const updated = await fetchJson(`/api/tickets/${current.id}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'skipped', counter_no: Number(counterSelect.value) || 1 })
+          });
+
+          speakAnnouncement(`${updated.code} has been skipped.`);
+          await loadDashboard();
+        } catch (error) {
+          showNotice('queueNotice', error.message, true);
+        }
+      });
+
+      toggleAudioBtn.addEventListener('click', () => {
+        state.audioEnabled = !state.audioEnabled;
+        toggleAudioBtn.textContent = state.audioEnabled ? 'Audio on' : 'Audio off';
+        toggleAudioBtn.classList.toggle('btn-success', state.audioEnabled);
+        toggleAudioBtn.classList.toggle('btn-primary', !state.audioEnabled);
+      });
+
+      resetQueueBtn.addEventListener('click', async () => {
+        if (!state.queueId) {
+          showNotice('queueNotice', 'Select a queue before resetting it.', true);
+          return;
+        }
+
+        try {
+          const result = await fetchJson(`/api/queues/${state.queueId}/reset`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          showNotice('queueNotice', result.message || 'Queue reset successfully.');
+          speakAnnouncement('Queue reset.');
+          await loadDashboard();
+        } catch (error) {
+          showNotice('queueNotice', error.message, true);
+        }
+      });
+
+      clearQueueBtn.addEventListener('click', async () => {
+        if (!state.queueId) {
+          showNotice('queueNotice', 'Select a queue before clearing it.', true);
+          return;
+        }
+
+        try {
+          const result = await fetchJson(`/api/queues/${state.queueId}/tickets`, {
+            method: 'DELETE'
+          });
+          showNotice('queueNotice', result.message || 'Queue cleared.');
+          speakAnnouncement('Queue cleared.');
+          await loadDashboard();
+        } catch (error) {
+          showNotice('queueNotice', error.message, true);
+        }
+      });
+
+      kioskModeBtn.addEventListener('click', () => {
+        state.kioskMode = !state.kioskMode;
+        kioskModeBtn.textContent = state.kioskMode ? 'Kiosk mode on' : 'Kiosk mode off';
+        kioskModeBtn.classList.toggle('btn-success', state.kioskMode);
+        kioskModeBtn.classList.toggle('btn-primary', !state.kioskMode);
+        announcementBanner.classList.toggle('visible', state.kioskMode);
+        if (!state.kioskMode) {
+          announcementBanner.textContent = 'No active announcement';
+        }
+      });
+
+      logoutBtn.addEventListener('click', logout);
+
+      async function initializeDashboard() {
+        const user = await ensureAdminAccess();
+        if (!user) {
+          return;
+        }
+
+        document.title = `QEase Dashboard | ${user.username}`;
+        await loadDashboard();
+        const events = new EventSource('/api/events');
+        events.addEventListener('queue:update', loadDashboard);
+        window.qeaseEvents = events;
+      }
+
+      initializeDashboard();
+    </script>
+  </body>
+</html>

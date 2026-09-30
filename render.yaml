@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: qease
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: QEASE_ADMIN_USERNAME
+        value: admin
+      - key: QEASE_ADMIN_PASSWORD
+        generateValue: true

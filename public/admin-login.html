@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QEase Admin Login</title>
+    <style>
+      :root {
+        --bg: #f5f2ff;
+        --card: rgba(255, 255, 255, 0.88);
+        --primary: #8b7af5;
+        --primary-dark: #6f5fe4;
+        --text: #2c3347;
+        --muted: #5f6880;
+        --border: #eae3ff;
+        --danger: #ef7b7b;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: radial-gradient(ellipse at top left, rgba(236, 229, 255, 0.76), transparent 52%), linear-gradient(rgba(255,255,255,0.45), rgba(245,242,255,0.76)), url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1600&q=80') center/cover;
+        color: var(--text);
+      }
+
+      .card {
+        width: min(420px, 92vw);
+        background: linear-gradient(180deg, rgba(255,255,255,0.90), rgba(255,255,255,0.82));
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 18px 32px rgba(139, 122, 245, 0.12);
+        backdrop-filter: blur(14px);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 22px 38px rgba(89, 73, 164, 0.14);
+      }
+
+      h1 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 0;
+        letter-spacing: -0.045em;
+      }
+
+      h1::before {
+        content: "";
+        display: inline-grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(140deg, #c7bbff, #8b7af5);
+        color: #fff;
+        box-shadow: inset 0 0 0 3px rgba(255,255,255,0.78), 0 8px 18px rgba(139, 122, 245, 0.2);
+      }
+
+      p { color: var(--muted); }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        color: var(--muted);
+      }
+
+      input {
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 1rem;
+        color: var(--text);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      }
+
+      input:focus {
+        border-color: #aa9df8;
+        box-shadow: 0 0 0 4px rgba(139, 122, 245, 0.12);
+        outline: none;
+      }
+
+      .btn {
+        position: relative;
+        overflow: hidden;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        background: linear-gradient(135deg, #9b8af7 0%, #7b6fe8 100%);
+        color: #fff;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      }
+
+      .btn::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        background: linear-gradient(110deg, transparent 20%, rgba(255,255,255,0.28) 48%, transparent 76%);
+        transform: translateX(-120%);
+        pointer-events: none;
+      }
+
+      .btn:hover {
+        background: linear-gradient(135deg, #8d7af5 0%, #6f5fe4 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(139, 122, 245, 0.18);
+      }
+
+      .btn:hover::after {
+        animation: button-shimmer 0.75s ease;
+      }
+
+      .btn:focus-visible {
+        outline: 3px solid rgba(139, 122, 245, 0.38);
+        outline-offset: 3px;
+      }
+
+      .alert {
+        margin-top: 14px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        display: none;
+      }
+
+      .alert.error {
+        display: block;
+        background: #fdeceb;
+        color: #9b3d3a;
+      }
+
+      @keyframes button-shimmer {
+        to { transform: translateX(120%); }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>QEase Admin Login</h1>
+      <p>Sign in to operate queue management and announcements.</p>
+
+      <form id="loginForm" autocomplete="on">
+        <label>
+          Username
+          <input id="username" type="text" autocomplete="username" required />
+        </label>
+        <label>
+          Password
+          <input id="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button class="btn" type="submit">Sign in</button>
+      </form>
+
+      <div id="loginAlert" class="alert"></div>
+    </div>
+
+    <script>
+      const loginForm = document.getElementById('loginForm');
+      const loginAlert = document.getElementById('loginAlert');
+
+      loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        try {
+          const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Login failed.');
+          }
+
+          const params = new URLSearchParams(window.location.search);
+          const requestedNext = params.get('next') || '/index.html';
+          const nextUrl = new URL(requestedNext, window.location.origin);
+          window.location.href = nextUrl.origin === window.location.origin
+            ? `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`
+            : '/index.html';
+        } catch (error) {
+          loginAlert.classList.add('error');
+          loginAlert.textContent = error.message;
+          loginAlert.style.display = 'block';
+        }
+      });
+    </script>
+  </body>
+</html>

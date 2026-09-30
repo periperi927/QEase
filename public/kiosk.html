@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f5f2ff" />
+    <title>QEase | Public Queue Display</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #292b40;
+        --muted: #6b7087;
+        --purple: #7665e8;
+        --lavender: #eeeaff;
+        --mint: #def5ed;
+        --line: rgba(118, 101, 232, 0.14);
+        --panel: rgba(255, 255, 255, 0.91);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(ellipse at 12% 0%, rgba(207, 197, 255, 0.72), transparent 42%),
+          radial-gradient(ellipse at 100% 100%, rgba(196, 238, 224, 0.55), transparent 40%),
+          #f6f4ff;
+      }
+
+      .screen {
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+        padding: clamp(20px, 3.2vw, 48px);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: clamp(24px, 4vh, 46px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 54px;
+        height: 54px;
+        place-items: center;
+        border-radius: 19px;
+        background: linear-gradient(140deg, #b7aafa, #7969e8);
+        box-shadow: 0 10px 24px rgba(118, 101, 232, 0.22), inset 0 0 0 3px rgba(255,255,255,0.65);
+        color: #fff;
+        font-size: 1.8rem;
+        font-weight: 900;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: clamp(1.4rem, 2.3vw, 2rem);
+        letter-spacing: -0.045em;
+      }
+
+      .brand p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .clock-wrap {
+        text-align: right;
+      }
+
+      #clock {
+        font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+        font-variant-numeric: tabular-nums;
+        font-weight: 750;
+        letter-spacing: -0.04em;
+      }
+
+      #date {
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .board {
+        display: grid;
+        flex: 1;
+        grid-template-columns: minmax(0, 1.55fr) minmax(300px, 0.85fr);
+        gap: clamp(18px, 2.4vw, 32px);
+        min-height: 0;
+      }
+
+      .board-panel {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 30px;
+        padding: clamp(22px, 3vw, 38px);
+        background: var(--panel);
+        box-shadow: 0 22px 60px rgba(89, 73, 164, 0.09);
+        backdrop-filter: blur(14px);
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 24px;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+        letter-spacing: 0.1em;
+      }
+
+      .live-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #39796b;
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.09em;
+      }
+
+      .live-indicator::before {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #55b99e;
+        box-shadow: 0 0 0 5px rgba(85, 185, 158, 0.14);
+        content: "";
+      }
+
+      .serving-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr));
+        gap: 18px;
+      }
+
+      .serving-card {
+        display: flex;
+        min-height: clamp(190px, 28vh, 280px);
+        flex-direction: column;
+        justify-content: space-between;
+        border: 1px solid rgba(118, 101, 232, 0.12);
+        border-radius: 24px;
+        padding: clamp(22px, 3vw, 34px);
+        background: linear-gradient(145deg, #f2efff, #fff 64%);
+        box-shadow: 0 12px 32px rgba(89, 73, 164, 0.07);
+      }
+
+      .serving-queue {
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 0.88rem;
+        font-weight: 700;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .serving-code {
+        margin: 12px 0;
+        color: var(--purple);
+        font-size: clamp(3.3rem, 8vw, 7.4rem);
+        font-variant-numeric: tabular-nums;
+        font-weight: 900;
+        letter-spacing: -0.075em;
+        line-height: 1;
+        overflow-wrap: anywhere;
+      }
+
+      .serving-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .counter-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 999px;
+        padding: 9px 14px;
+        background: #e4f6ef;
+        color: #286b5f;
+        font-size: 0.95rem;
+        font-weight: 800;
+      }
+
+      .ticket-status {
+        color: var(--muted);
+        font-size: 0.76rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .next-panel {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .next-panel .section-heading {
+        margin-bottom: 10px;
+      }
+
+      .next-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        overflow-y: auto;
+      }
+
+      .next-ticket {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px 18px;
+        background: linear-gradient(110deg, #fff, #f8f6ff);
+      }
+
+      .next-ticket-code {
+        color: var(--ink);
+        font-size: clamp(1.45rem, 2.4vw, 2rem);
+        font-variant-numeric: tabular-nums;
+        font-weight: 850;
+        letter-spacing: -0.04em;
+      }
+
+      .next-ticket-queue {
+        overflow: hidden;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .next-position {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 13px;
+        background: var(--lavender);
+        color: #594aa7;
+        font-weight: 800;
+      }
+
+      .empty-state {
+        display: grid;
+        min-height: 170px;
+        place-items: center;
+        border: 1px dashed rgba(118, 101, 232, 0.24);
+        border-radius: 22px;
+        padding: 24px;
+        color: var(--muted);
+        font-size: 1.08rem;
+        text-align: center;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      #boardMessage {
+        text-align: right;
+      }
+
+      @media (max-width: 850px) {
+        .screen { min-height: 100vh; }
+        .board { grid-template-columns: 1fr; }
+        .serving-code { font-size: clamp(3.4rem, 13vw, 6rem); }
+      }
+
+      @media (max-width: 520px) {
+        .topbar { align-items: flex-start; }
+        .brand { gap: 10px; }
+        .brand-mark { width: 44px; height: 44px; border-radius: 15px; font-size: 1.5rem; }
+        .brand p { font-size: 0.8rem; }
+        .clock-wrap { min-width: 92px; }
+        #date { font-size: 0.75rem; }
+        .board-panel { border-radius: 22px; padding: 20px; }
+        .serving-card { min-height: 190px; }
+        .footer { flex-direction: column; }
+        #boardMessage { text-align: left; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="screen">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">Q</div>
+          <div>
+            <h1>QEase</h1>
+            <p>Campus services queue display</p>
+          </div>
+        </div>
+        <div class="clock-wrap">
+          <div id="clock" aria-label="Current time">--:--</div>
+          <div id="date"></div>
+        </div>
+      </header>
+
+      <div class="board">
+        <section class="board-panel">
+          <div class="section-heading">
+            <h2>NOW SERVING</h2>
+            <span class="live-indicator">LIVE</span>
+          </div>
+          <div id="servingList" class="serving-list" aria-live="polite" aria-relevant="all">
+            <div class="empty-state">Loading current tickets…</div>
+          </div>
+        </section>
+
+        <section class="board-panel next-panel">
+          <div class="section-heading">
+            <h2>NEXT IN LINE</h2>
+          </div>
+          <div id="nextList" class="next-list" aria-live="polite" aria-relevant="all">
+            <div class="empty-state">Loading waiting tickets…</div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footer">
+        <span>Ticket status refreshes automatically.</span>
+        <span id="boardMessage" role="status">Connecting to queue service…</span>
+      </footer>
+    </main>
+
+    <script>
+      const servingList = document.getElementById('servingList');
+      const nextList = document.getElementById('nextList');
+      const boardMessage = document.getElementById('boardMessage');
+      const clock = document.getElementById('clock');
+      const date = document.getElementById('date');
+
+      function updateClock() {
+        const now = new Date();
+        clock.textContent = new Intl.DateTimeFormat(undefined, {
+          hour: 'numeric',
+          minute: '2-digit'
+        }).format(now);
+        date.textContent = new Intl.DateTimeFormat(undefined, {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric'
+        }).format(now);
+      }
+
+      function renderEmpty(container, message) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = message;
+        container.replaceChildren(empty);
+      }
+
+      function renderServing(tickets) {
+        if (!tickets.length) {
+          renderEmpty(servingList, 'No tickets are being called right now.');
+          return;
+        }
+
+        const cards = tickets.map((ticket) => {
+          const card = document.createElement('article');
+          card.className = 'serving-card';
+
+          const queue = document.createElement('div');
+          queue.className = 'serving-queue';
+          queue.textContent = `${ticket.queue_name} (${ticket.prefix})`;
+
+          const code = document.createElement('div');
+          code.className = 'serving-code';
+          code.textContent = ticket.code;
+
+          const footer = document.createElement('div');
+          footer.className = 'serving-footer';
+
+          const counter = document.createElement('span');
+          counter.className = 'counter-label';
+          counter.textContent = `Counter ${ticket.counter_no || '—'}`;
+
+          const status = document.createElement('span');
+          status.className = 'ticket-status';
+          status.textContent = ticket.status;
+
+          footer.append(counter, status);
+          card.append(queue, code, footer);
+          return card;
+        });
+
+        servingList.replaceChildren(...cards);
+      }
+
+      function renderNext(tickets) {
+        if (!tickets.length) {
+          renderEmpty(nextList, 'There are no waiting tickets.');
+          return;
+        }
+
+        const rows = tickets.map((ticket) => {
+          const row = document.createElement('article');
+          row.className = 'next-ticket';
+
+          const details = document.createElement('div');
+          const code = document.createElement('div');
+          code.className = 'next-ticket-code';
+          code.textContent = ticket.code;
+
+          const queue = document.createElement('div');
+          queue.className = 'next-ticket-queue';
+          queue.textContent = `${ticket.queue_name} (${ticket.prefix})`;
+          details.append(code, queue);
+
+          const position = document.createElement('span');
+          position.className = 'next-position';
+          position.textContent = String(ticket.queue_position);
+          position.setAttribute('aria-label', `Position ${ticket.queue_position} in ${ticket.queue_name}`);
+
+          row.append(details, position);
+          return row;
+        });
+
+        nextList.replaceChildren(...rows);
+      }
+
+      async function loadBoard() {
+        try {
+          const response = await fetch('/api/kiosk/board');
+          const board = await response.json();
+          if (!response.ok) {
+            throw new Error(board.error || 'Unable to load the public queue board.');
+          }
+
+          renderServing(board.nowServing);
+          renderNext(board.nextTickets);
+          boardMessage.textContent = 'All queues are up to date';
+        } catch (error) {
+          boardMessage.textContent = 'Connection issue — retrying…';
+          renderEmpty(servingList, 'Queue information is temporarily unavailable.');
+          renderEmpty(nextList, 'Waiting tickets will appear when the connection is restored.');
+          console.error('Unable to refresh public queue board:', error);
+        }
+      }
+
+      updateClock();
+      loadBoard();
+      const queueEvents = new EventSource('/api/events');
+      queueEvents.addEventListener('queue:update', loadBoard);
+      queueEvents.addEventListener('error', () => {
+        boardMessage.textContent = 'Reconnecting to queue service…';
+      });
+      setInterval(updateClock, 1000);
+    </script>
+  </body>
+</html>
